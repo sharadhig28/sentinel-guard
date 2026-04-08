@@ -1,36 +1,38 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+from typing import Optional
 import sys
 import os
 
-# This ensures we can find models and environment logic
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Add root to path so we can find models.py
+sys.path.append(os.getcwd())
 
-try:
-    from environment import SentinelEnv
-    from models import Action, Observation
-except ImportError:
-    from server.environment import SentinelEnv
-    from models import Action, Observation
+from models import Action, Observation
+from server.environment import SentinelEnv
 
-app = FastAPI(title="SentinelGuard RL Environment")
+app = FastAPI()
 env = SentinelEnv()
+
+# This tells FastAPI how to read the "task_id" from the checker
+class ResetRequest(BaseModel):
+    task_id: Optional[str] = "brute_force"
 
 @app.get("/")
 async def home():
-    return {"message": "SentinelGuard Environment is LIVE", "docs": "/docs", "status_endpoint": "/state"}
+    return {"message": "SentinelGuard Environment is LIVE"}
 
 @app.post("/reset")
-async def reset():
-    obs = env.reset()
-    # Ensure we return a dictionary
-    return {"observation": obs.dict() if hasattr(obs, 'dict') else obs}
+async def reset(request: Optional[ResetRequest] = None):
+    # Use the task_id from the checker, or default to brute_force
+    task = request.task_id if request else "brute_force"
+    obs = env.reset(task_id=task)
+    return {"observation": obs}
 
 @app.post("/step")
 async def step(action: Action):
     obs, reward, done, info = env.step(action)
     return {
-        "observation": obs.dict() if hasattr(obs, 'dict') else obs,
+        "observation": obs,
         "reward": reward,
         "done": done,
         "info": info
@@ -38,4 +40,4 @@ async def step(action: Action):
 
 @app.get("/state")
 async def state():
-    return {"status": "running", "task": env.current_task}
+    return {"status": "running"}
