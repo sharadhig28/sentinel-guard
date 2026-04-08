@@ -1,0 +1,16 @@
+# OpenEnv Configuration for SentinelGuard
+name: "sentinel_guard_v1"
+version: "1.0.0"
+description: "A cybersecurity SOC analyst simulation for training defensive AI agents."
+entrypoint: "python server/app.py"
+
+tasks:
+  - id: "brute_force"
+    difficulty: "easy"
+    description: "Identify and block the IP address performing a brute force attack (192.168.1.50)."
+  - id: "impossible_travel"
+    difficulty: "medium"
+    description: "Detect a user account compromised by impossible travel geography (user: shara)."
+  - id: "data_exfil"
+    difficulty: "hard"
+    description: "Identify a host performing massive data exfiltration to an external server (IP: 192.168.1.100)."
